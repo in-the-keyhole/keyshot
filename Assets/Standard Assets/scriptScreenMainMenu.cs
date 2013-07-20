@@ -3,7 +3,8 @@ using System.Collections;
 
 public class scriptScreenMainMenu : MonoBehaviour {
 	string hidden = "";
-	int numberOfButtons = 5;
+	bool   showSecretButton = false;
+	int    numberOfButtons = 4;
 
 	void Start() {
 		Screen.orientation = ScreenOrientation.LandscapeLeft;
@@ -11,6 +12,18 @@ public class scriptScreenMainMenu : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update() {
+		numberOfButtons = 5;
+		
+		#if UNITY_IPHONE || UNITY_WEBPLAYER
+			--numberOfButtons;
+		#endif
+
+		#if !UNITY_IPHONE
+			if (SystemInfo.supportsAccelerometer) {
+				++numberOfButtons;
+			}
+		#endif
+
 		string input = Input.inputString;
 		if (input.Length > 0) {
 			hidden += input;
@@ -27,7 +40,8 @@ public class scriptScreenMainMenu : MonoBehaviour {
 		}
 		
 		if (hidden.Contains("key") || touched) {
-			numberOfButtons = 6;
+			++numberOfButtons;
+			showSecretButton = true;
 		} else if (hidden.Length > 10) {
 			hidden = "";
 		}
@@ -68,22 +82,31 @@ public class scriptScreenMainMenu : MonoBehaviour {
 
 			y += buttonHeight + spacer;
 			if (GUI.Button(new Rect(size, y, buttonWidth, buttonHeight), "Homepage", buttonStyle)) {
-				Application.OpenURL("http://www.keyholesoftware.com/");
+				Application.OpenURL("http://keyholesoftware.com/2013/04/29/writing-games-with-unity-part-one/");
 			}
 
+			y += buttonHeight + spacer;
+			if (GUI.Button(new Rect(size, y, buttonWidth, buttonHeight), "Git Src Code!", buttonStyle)) {
+				Application.OpenURL("https://github.com/in-the-keyhole/keyshot.git");
+			}
+
+#if !UNITY_IPHONE
 			if (SystemInfo.supportsAccelerometer) {
 				y += buttonHeight + spacer;
 				if (GUI.Button(new Rect(size, y, buttonWidth, buttonHeight), "Settings", buttonStyle)) {
 					Application.LoadLevel("sceneScreenSettings");
 				}
 			}
+#endif
 
+#if !UNITY_IPHONE && !UNITY_WEBPLAYER
 			y += buttonHeight + spacer;
 			if (GUI.Button(new Rect(size, y, buttonWidth, buttonHeight), "Exit Game", buttonStyle)) {
 				Application.Quit();
 			}
+#endif
 
-			if (numberOfButtons == 6) {
+			if (showSecretButton) {
 				y += buttonHeight + spacer;
 				if (GUI.Button(new Rect(size, y, buttonWidth, buttonHeight), "Clear Data", buttonStyle)) {
 					PlayerPrefs.DeleteAll();
